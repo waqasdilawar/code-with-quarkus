@@ -5,6 +5,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.stream.Collectors;
 import org.devgurupk.data.entity.GuestEntity;
 import org.devgurupk.data.entity.RoomEntity;
 import org.devgurupk.data.repository.GuestRepository;
@@ -30,17 +31,23 @@ public class GreetingService {
   }
 
   public GreetingResponse getGreeting() {
-    GreetingResponse response = new GreetingResponse();
-    response.setGreeting(this.greeting);
-    response.setDieRoll(this.dieRollerService.getRoll());
+    int dieRoll = this.dieRollerService.getRoll();
+
     List<RoomEntity> rooms = this.roomRepository.listAll();
-    List<String> roomNumbers = new ArrayList<>();
-    rooms.forEach(room -> roomNumbers.add(room.getRoomNumber()));
-    response.setRoomNumbers(roomNumbers);
+    List<String> roomNumbers = rooms.stream()
+      .map(RoomEntity::getRoomNumber)
+      .collect(Collectors.toList());
+
     List<GuestEntity> guests = this.guestRepository.listAll();
-    List<String> emailAddresses = new ArrayList<>();
-    guests.forEach(guest -> emailAddresses.add(guest.getEmailAddress()));
-    response.setEmailAddresses(emailAddresses);
-    return response;
+    List<String> emailAddresses = guests.stream()
+      .map(GuestEntity::getEmailAddress)
+      .collect(Collectors.toList());
+
+    return new GreetingResponse(
+      this.greeting,
+      dieRoll,
+      roomNumbers,
+      emailAddresses
+    );
   }
 }
